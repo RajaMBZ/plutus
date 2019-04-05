@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE ConstraintKinds   #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE LambdaCase        #-}
@@ -42,6 +43,7 @@ import qualified Language.PlutusCore.StdLib.Data.Unit        as Unit
 import qualified GhcPlugins                                  as GHC
 
 import           GHC.Natural
+import           GHC.TypeLits
 
 import qualified Language.Haskell.TH.Syntax                  as TH
 
@@ -49,6 +51,7 @@ import           Control.Monad
 import           Control.Monad.Reader
 
 import qualified Data.Map                                    as Map
+import qualified Data.ByteString.Lazy                        as BSL
 import           Data.Proxy
 import qualified Data.Set                                    as Set
 
@@ -135,6 +138,7 @@ builtinNames = [
     , 'Builtins.sha2_256
     , 'Builtins.sha3_256
     , 'Builtins.equalsByteString
+    , 'Builtins.emptyByteString
 
     , 'Builtins.verifySignature
 
@@ -213,6 +217,10 @@ defineBuiltinTerms = do
     do
         term <- wrapBsRel 2 $ mkBuiltin PLC.EqByteString
         defineBuiltinTerm 'Builtins.equalsByteString term [bs, bool]
+
+    do
+        let term = PIR.Constant () $ PLC.BuiltinBS () (fromIntegral $ natVal (Proxy @32)) BSL.empty
+        defineBuiltinTerm 'Builtins.emptyByteString term [bs]
 
     -- Integer builtins
     do
